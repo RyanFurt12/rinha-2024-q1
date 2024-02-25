@@ -1,13 +1,10 @@
-CREATE DATABASE IF NOT EXISTS rinha2024q1;
-USE rinha2024q1;
- 
-CREATE TABLE IF NOT EXISTS clientes (
+CREATE TABLE clientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     limite INT NOT NULL,
     valor INT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS transacoes (
+CREATE TABLE transacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cliente_id INT NOT NULL,
     valor INT NOT NULL,

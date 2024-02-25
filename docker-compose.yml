@@ -1,64 +1,32 @@
 version: '3.8'
 
 services:
-  web1:
-    image: mcr.microsoft.com/dotnet/sdk:8.0
-    volumes:
-      - ./src:/src
-    environment:
-      - ASPNETCORE_URLS=http://*:8080
-    working_dir: /src
-    command: ["dotnet", "run"]
-    deploy:
-      resources:
-        limits:
-          cpus: "0.4"
-          memory: "125MB"
-
-  web2:
-    image: mcr.microsoft.com/dotnet/sdk:8.0
-    volumes:
-      - ./src:/src
-    environment:
-      - ASPNETCORE_URLS=http://*:8080
-    working_dir: /src
-    command: ["dotnet", "run"]
-    deploy:
-      resources:
-        limits:
-          cpus: "0.4"
-          memory: "125MB"
+  # nginx:
+  #   image: nginx:latest
+  #   ports:
+  #     - "9999:9999"
+  #   depends_on:
+  #     - api1
+  #     - api2
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   db:
     image: mysql:latest
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: Senha123
+      MYSQL_USER: admin 
+      MYSQL_PASSWORD: senha123
       MYSQL_DATABASE: rinha2024q1
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: Senha123
+      MYSQL_RANDOM_ROOT_PASSWORD: true
     ports:
-      - "3308:3308"
+      - "3308:3306"
     volumes:
-      - ./script.sql:/docker-entrypoint-initdb.d/script.sql
-    deploy:
-      resources:
-        limits:
-          cpus: "0.35"
-          memory: "150MB"
+      - ./MySQL_initdb.d/:/docker-entrypoint-initdb.d/
 
-  nginx:
-    image: nginx:latest
-    ports:
-      - "9999:9999"
-    network_mode: host
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - web1
-      - web2
-    deploy:
-        resources:
-          limits:
-            cpus: "0.35"
-            memory: "100MB"
+  # api1:
+  #   image: rinha2024q1
+  #   ports:
+  #     - "8080:80" 
+  #   depends_on:
+  #     - db
