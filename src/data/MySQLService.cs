@@ -18,7 +18,7 @@ namespace rinha_2024_q1.data
             var _connection = new MySqlConnection(_connectionString);
             _connection.Open();
 
-            string query = $"SELECT COUNT(*) FROM Clientes WHERE Id = {clientId}";
+            string query = $"SELECT COUNT(*) FROM clientes WHERE Id = {clientId}";
             var command = new MySqlCommand(query, _connection);
 
             return (long)command.ExecuteScalar() > 0;
@@ -42,7 +42,8 @@ namespace rinha_2024_q1.data
                     t.criada_em DESC
                 LIMIT 10
             ";
-
+            
+            var dateNow = new MySqlCommand("SELECT NOW()", _connection).ExecuteScalar();
             var command = new MySqlCommand(query, _connection);
             var reader = command.ExecuteReader();
 
@@ -56,7 +57,7 @@ namespace rinha_2024_q1.data
                     saldo = new
                     {
                         total,
-                        data_extrato = DateTime.Now,
+                        data_extrato = dateNow,
                         limite
                     },
                     ultimas_transacoes = new List<object>()
@@ -97,7 +98,7 @@ namespace rinha_2024_q1.data
             var _connection = new MySqlConnection(_connectionString);
             _connection.Open();
 
-            string query = @"INSERT INTO rinha2024q1.transacoes (`cliente_id`, `valor`, `tipo`, `descricao`, `criada_em`)
+            string query = @"INSERT INTO transacoes (`cliente_id`, `valor`, `tipo`, `descricao`, `criada_em`)
                      VALUES (@clientId, @valor, @tipo, @descricao, NOW())";
 
             var command = new MySqlCommand(query, _connection);
@@ -107,22 +108,22 @@ namespace rinha_2024_q1.data
             command.Parameters.AddWithValue("@descricao", transaction.descricao);
 
             command.ExecuteNonQuery();
-            var response = UpdateClientBalance(clientId, transaction.valor, _connection);
+            var response = UpdateClientBalance(clientId, transaction, _connection);
 
             return response;
         }
 
-        private static object UpdateClientBalance(int clientId, int value, MySqlConnection connection)
+        private static object UpdateClientBalance(int clientId, Transaction transaction, MySqlConnection connection)
         {
             string query = $"SELECT valor FROM clientes c WHERE c.id = {clientId}";
             var command = new MySqlCommand(query, connection);
-            value = (int)command.ExecuteScalar() - value;
+            int value = transaction.tipo == "c" ? (int)command.ExecuteScalar() + transaction.valor : (int)command.ExecuteScalar() - transaction.valor;
 
             query = $"SELECT limite FROM clientes c WHERE c.id = {clientId}";
             command = new MySqlCommand(query, connection);
             int limite = (int)command.ExecuteScalar();
 
-            query = $"UPDATE rinha2024q1.clientes SET valor = {value} WHERE (id = {clientId});";
+            query = $"UPDATE clientes SET valor = {value} WHERE (id = {clientId});";
             command = new MySqlCommand(query, connection);
             command.ExecuteNonQuery();
 
@@ -145,10 +146,8 @@ namespace rinha_2024_q1.data
             query = $"SELECT limite FROM clientes c WHERE c.id = {clientId}";
             command = new MySqlCommand(query, _connection);
             var limit = (int)command.ExecuteScalar();
-            
-            if(value *-1 > limit) return false;
 
-            return true;
+            return (value * -1) <= limit;
         }
     }
 
